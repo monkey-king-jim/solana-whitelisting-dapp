@@ -13,10 +13,7 @@ const PUBKEY_LENGTH: usize = 32;
 pub mod whitelisting {
     use super::*;
 
-    pub fn create_whitelist(ctx: Context<CreateWhitelist>, added_address: u8) -> Result<()> {
-        let counter_account = &mut ctx.accounts.counter_account;
-        counter_account.authority = ctx.accounts.user.key();
-        counter_account.count = 0;
+    pub fn create_whitelist(ctx: Context<CreateWhitelist>) -> Result<()> {
         Ok(())
     }
 }
