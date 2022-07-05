@@ -1,13 +1,15 @@
 [features]
 seeds = false
 [programs.localnet]
-solana_whitelisting_dapp = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+solana_whitelisting_dapp = "GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX"
+[programs.devnet]
+solana_whitelisting_dapp = "GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/Users/jamesw/.config/solana/id.json"
 
 [scripts]
