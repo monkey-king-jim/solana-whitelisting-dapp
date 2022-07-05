@@ -47,7 +47,8 @@ pub struct CreateWhitelist<'info> {
 pub struct AddToWhitelist<'info> {
     #[account(mut, has_one=authority)]
     pub whitelist: Account<'info, Whitelist>,
-    pub wallet: UncheckedAccount<'info>,
+    /// CHECK: TODO
+    pub wallet: UncheckedAccount<'info>, 
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
