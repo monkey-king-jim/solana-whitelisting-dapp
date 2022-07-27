@@ -1,9 +1,9 @@
 [features]
 seeds = false
-[programs.localnet]
-solana_whitelisting_dapp = "GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX"
+
 [programs.devnet]
-solana_whitelisting_dapp = "GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX"
+whitelisting = "GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX"
+counter = "8UCFsbJjuTzUimm4g9TuVooR3dKEC7MNV8wyqZp8TEKH"
 
 [registry]
 url = "https://anchor.projectserum.com"

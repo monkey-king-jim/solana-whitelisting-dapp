@@ -5,36 +5,92 @@ import { Keypair, SystemProgram } from "@solana/web3.js";
 
 describe("solana-whitelisting-dapp", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const wallet = provider.wallet;
+  const systemProgram = anchor.web3.SystemProgram;
+  const program = anchor.workspace.Whitelisting as Program<Whitelisting>;
+  const add_to_whitelist = Keypair.generate();
 
-  const program = anchor.workspace
-    .SolanaWhitelistingDapp as Program<Whitelisting>;
-  console.log(anchor.workspace);
+  // console.log(anchor.workspace);
 
-  it("Is initialized!", async () => {
-    const provider = anchor.AnchorProvider.env();
-    anchor.setProvider(provider);
-    const wallet = provider.wallet;
-    const systemProgram = anchor.web3.SystemProgram;
-    const program = anchor.workspace.Whitelisting as Program<Whitelisting>;
+  // it("Is initialized!", async () => {
+  //   const [whitelist, _whitelistBump] =
+  //     await anchor.web3.PublicKey.findProgramAddress(
+  //       [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
+  //       program.programId
+  //     );
 
-    const added_address = Keypair.generate();
-    const added_address_pubkey = added_address.publicKey;
+  //   const tx = await program.methods
+  //     .createWhitelist()
+  //     .accounts({
+  //       authority: wallet.publicKey,
+  //       whitelist,
+  //       systemProgram: systemProgram.programId,
+  //     })
+  //     .rpc();
+  //   console.log("Your transaction signature", tx);
+  // });
 
-    const [whitelist, _whitelistBump] =
+  it("Fetched the base whitelist!", async () => {
+    const [whitelistPubkey, _whitelistBump] =
       await anchor.web3.PublicKey.findProgramAddress(
         [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
         program.programId
       );
 
+    const whitelist = await program.account.whitelist.fetch(whitelistPubkey);
+    console.log("Your whitelist", whitelist);
+  });
+
+  it("Added a wallet to the whitelist!", async () => {
+    const [whitelistPubkey, _whitelistBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
+        program.programId
+      );
+
+    const [whitelistDataPubkey, _whitelistDataBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [whitelistPubkey.toBytes(), add_to_whitelist.publicKey.toBytes()],
+        program.programId
+      );
+
     const tx = await program.methods
-      .createWhitelist("foo")
+      .addToWhitelist()
       .accounts({
-        user: wallet.publicKey,
-        whitelist,
+        authority: wallet.publicKey,
+        whitelist: whitelistPubkey,
+        wallet: add_to_whitelist.publicKey,
+        whitelistData: whitelistDataPubkey,
         systemProgram: systemProgram.programId,
       })
       .rpc();
-    console.log("Your transaction signature", tx);
+    // const latestBlockHash = await provider.connection.getLatestBlockhash();
+    // await provider.connection.confirmTransaction({
+    //   blockhash: latestBlockHash.blockhash,
+    //   lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+    //   signature: tx,
+    // });
+  });
+
+  it("Verified a whitelist data!", async () => {
+    const [whitelistPubkey, _whitelistBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
+        program.programId
+      );
+
+    const [whitelistDataPubkey, _whitelistDataBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [whitelistPubkey.toBytes(), add_to_whitelist.publicKey.toBytes()],
+        program.programId
+      );
+
+    const whitelistData = await program.account.whitelistData.fetch(
+      whitelistDataPubkey
+    );
+    // console.log("whitelistDataPubkey", whitelistDataPubkey.toString());
+    console.log("The data is whitelisted: ", whitelistData);
   });
 });
