@@ -14,23 +14,23 @@ describe("solana-whitelisting-dapp", () => {
 
   // console.log(anchor.workspace);
 
-  // it("Is initialized!", async () => {
-  //   const [whitelist, _whitelistBump] =
-  //     await anchor.web3.PublicKey.findProgramAddress(
-  //       [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
-  //       program.programId
-  //     );
+  it("Is initialized!", async () => {
+    const [whitelist, _whitelistBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
+        program.programId
+      );
 
-  //   const tx = await program.methods
-  //     .createWhitelist()
-  //     .accounts({
-  //       authority: wallet.publicKey,
-  //       whitelist,
-  //       systemProgram: systemProgram.programId,
-  //     })
-  //     .rpc();
-  //   console.log("Your transaction signature", tx);
-  // });
+    const tx = await program.methods
+      .createWhitelist("test")
+      .accounts({
+        authority: wallet.publicKey,
+        whitelist,
+        systemProgram: systemProgram.programId,
+      })
+      .rpc();
+    console.log("Your transaction signature", tx);
+  });
 
   it("Fetched the base whitelist!", async () => {
     const [whitelistPubkey, _whitelistBump] =

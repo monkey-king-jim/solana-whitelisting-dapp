@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::account_info::AccountInfo;
 
-declare_id!("GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX");
+declare_id!("DoXHuZ7cuGeDiLV6AwnoEsMLo1UGZ3AX5Mk7KgEy4UwV");
 
 const DISCRIMINATOR_LENGTH: usize = 8;
 const PUBKEY_LENGTH: usize = 32;

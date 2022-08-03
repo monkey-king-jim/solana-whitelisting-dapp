@@ -2,8 +2,8 @@
 seeds = false
 
 [programs.devnet]
-whitelisting = "GgcfkCKzrDHHnuhfAEvC7ohNjZk6hY9KZW2t9Sk7neRX"
-counter = "8UCFsbJjuTzUimm4g9TuVooR3dKEC7MNV8wyqZp8TEKH"
+whitelisting = "DoXHuZ7cuGeDiLV6AwnoEsMLo1UGZ3AX5Mk7KgEy4UwV"
+counter = "3pBmYTFPiUNstae4M2WUAQ6Giydr4nstQ6rnM1TXh8vk"
 
 [registry]
 url = "https://anchor.projectserum.com"

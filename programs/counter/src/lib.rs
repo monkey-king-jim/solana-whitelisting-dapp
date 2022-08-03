@@ -1,10 +1,17 @@
 use anchor_lang::prelude::*;
 // use anchor_lang::solana_program::account_info::AccountInfo;
-use whitelisting::{self, program::Whitelisting, Whitelist};
+use whitelisting::{
+    self, 
+    program::Whitelisting, 
+    Whitelist
+};
 use whitelisting::cpi::accounts::CreateWhitelist;
 use anchor_lang::context::CpiContext;
+use solana_program::{
+    pubkey::Pubkey,
+};
 
-declare_id!("8UCFsbJjuTzUimm4g9TuVooR3dKEC7MNV8wyqZp8TEKH");
+declare_id!("3pBmYTFPiUNstae4M2WUAQ6Giydr4nstQ6rnM1TXh8vk");
 
 
 //Data logics
@@ -15,7 +22,7 @@ pub mod counter {
     pub fn create_counter(ctx: Context<CreateCounter>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
         counter.count = 0;
-        counter.whitelist = ctx.accounts.whitelisting_program.key();
+        counter.whitelist_config = ctx.accounts.whitelist_config.key();
         let key = "counter";
         whitelisting::cpi::create_whitelist(ctx.accounts.create_whitelist_ctx(), key.to_string())
     }
@@ -56,7 +63,7 @@ pub struct CreateCounter<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut)]
-    pub whitelist: UncheckedAccount<'info>,
+    pub whitelist_config: UncheckedAccount<'info>,
     pub whitelisting_program: Program<'info, Whitelisting>,
     pub system_program: Program<'info, System>,
 }
@@ -65,7 +72,7 @@ impl<'info> CreateCounter<'info> {
     pub fn create_whitelist_ctx(&self) -> CpiContext<'_, '_, '_, 'info, CreateWhitelist<'info>> {
         let whitelisting_program_id = self.whitelisting_program.to_account_info();
         let whitelisting_accounts = CreateWhitelist {
-            whitelist: self.whitelist.to_account_info(),
+            whitelist: self.whitelist_config.to_account_info(),
             authority: self.user.to_account_info(),
             system_program: self.system_program.to_account_info(),
         };
@@ -95,6 +102,6 @@ pub struct Decrement<'info> {
 // data structures
 #[account]
 pub struct Counter {
-    whitelist: Pubkey,
+    whitelist_config: Pubkey,
     pub count: u32,
 }
