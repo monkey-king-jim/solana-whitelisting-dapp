@@ -3,7 +3,8 @@ use anchor_lang::prelude::*;
 use whitelisting::{
     self, 
     program::Whitelisting, 
-    Whitelist
+    Whitelist,
+    WhitelistData
 };
 use whitelisting::cpi::accounts::CreateWhitelist;
 use anchor_lang::context::CpiContext;
@@ -34,17 +35,17 @@ pub mod counter {
     }
 
     pub fn increment(ctx: Context<Increment>) -> Result<()> {
-    let counter_account = &mut ctx.accounts.counter;
-    counter_account.count = counter_account.count.checked_add(1).unwrap();
-    Ok(())
+        let counter_account = &mut ctx.accounts.counter;
+        counter_account.count = counter_account.count.checked_add(1).unwrap();
+        Ok(())
     }
 
     pub fn decrement(ctx: Context<Decrement>) -> Result<()> {
-    let counter_account = &mut ctx.accounts.counter;
-    if counter_account.count > 0 {
-        counter_account.count -= 1;
-    }
-    Ok(())
+        let counter_account = &mut ctx.accounts.counter;
+        if counter_account.count > 0 {
+            counter_account.count -= 1;
+        }
+        Ok(())
     }
 }
 
@@ -63,6 +64,7 @@ pub struct CreateCounter<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut)]
+    /// CHECK: ok
     pub whitelist_config: UncheckedAccount<'info>,
     pub whitelisting_program: Program<'info, Whitelisting>,
     pub system_program: Program<'info, System>,
@@ -88,8 +90,12 @@ pub struct Update<'info> {
 
 #[derive(Accounts)]
 pub struct Increment<'info> {
-    #[account(mut)]
+    #[account(mut, has_one = whitelist_config)]
     pub counter: Account<'info, Counter>,
+    #[account(has_one = whitelisted_data)]
+    pub whitelist_data: Account<'info, WhitelistData>,
+    pub whitelisted_data: Signer<'info>,
+    pub whitelist_config: Account<'info, Whitelist>
 }
 
 #[derive(Accounts)]
@@ -97,7 +103,6 @@ pub struct Decrement<'info> {
     #[account(mut)]
     pub counter: Account<'info, Counter>,
 }
-
 
 // data structures
 #[account]

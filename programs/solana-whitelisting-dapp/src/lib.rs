@@ -86,4 +86,8 @@ pub struct WhitelistData {
 
 impl WhitelistData {
     const LEN: usize = DISCRIMINATOR_LENGTH + PUBKEY_LENGTH;
+
+    pub fn helper() -> Pubkey {
+        Pubkey::new_unique()
+    }
 }
