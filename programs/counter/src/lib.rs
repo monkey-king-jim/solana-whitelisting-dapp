@@ -10,10 +10,11 @@ use whitelisting::cpi::accounts::CreateWhitelist;
 use anchor_lang::context::CpiContext;
 use solana_program::{
     pubkey::Pubkey,
+    pubkey
 };
 
 declare_id!("3pBmYTFPiUNstae4M2WUAQ6Giydr4nstQ6rnM1TXh8vk");
-
+const USECASE: &str = "counter";
 
 //Data logics
 #[program]
@@ -24,8 +25,8 @@ pub mod counter {
         let counter = &mut ctx.accounts.counter;
         counter.count = 0;
         counter.whitelist_config = ctx.accounts.whitelist_config.key();
-        let key = "counter";
-        whitelisting::cpi::create_whitelist(ctx.accounts.create_whitelist_ctx(), key.to_string())
+        
+        whitelisting::cpi::create_whitelist(ctx.accounts.create_whitelist_ctx(), USECASE.to_string())
     }
 
     pub fn update(ctx: Context<Update>, count: u32) -> Result<()> {
@@ -90,12 +91,20 @@ pub struct Update<'info> {
 
 #[derive(Accounts)]
 pub struct Increment<'info> {
-    #[account(mut, has_one = whitelist_config)]
+    #[account(mut)]
     pub counter: Account<'info, Counter>,
-    #[account(has_one = whitelisted_data)]
+    #[account( 
+        seeds = 
+        [
+            &USECASE.as_bytes(), 
+            whitelisted_data.key().as_ref()
+        ], 
+        bump,
+        seeds::program = counter.whitelist_config,
+        has_one = whitelisted_data
+    )]
     pub whitelist_data: Account<'info, WhitelistData>,
     pub whitelisted_data: Signer<'info>,
-    pub whitelist_config: Account<'info, Whitelist>
 }
 
 #[derive(Accounts)]
