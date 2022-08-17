@@ -34,16 +34,16 @@ describe("solana-whitelisting-dapp", () => {
     // console.log("Your transaction signature", tx);
   });
 
-  // it("Fetched the base whitelist!", async () => {
-  //   const [whitelistPubkey, _whitelistBump] =
-  //     await anchor.web3.PublicKey.findProgramAddress(
-  //       [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
-  //       program.programId
-  //     );
+  it("Fetched the base whitelist!", async () => {
+    const [whitelistPubkey, _whitelistBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
+        program.programId
+      );
 
-  //   const whitelist = await program.account.whitelist.fetch(whitelistPubkey);
-  //   console.log("Your whitelist", whitelist);
-  // });
+    const whitelist = await program.account.whitelist.fetch(whitelistPubkey);
+    console.log("Your whitelist", whitelist);
+  });
 
   it("Added a wallet to the whitelist!", async () => {
     const [whitelistPubkey, _whitelistBump] =
@@ -68,31 +68,32 @@ describe("solana-whitelisting-dapp", () => {
         systemProgram: systemProgram.programId,
       })
       .rpc();
-  //   // const latestBlockHash = await provider.connection.getLatestBlockhash();
-  //   // await provider.connection.confirmTransaction({
-  //   //   blockhash: latestBlockHash.blockhash,
-  //   //   lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-  //   //   signature: tx,
-  //   // });
-  // });
+    //   // const latestBlockHash = await provider.connection.getLatestBlockhash();
+    //   // await provider.connection.confirmTransaction({
+    //   //   blockhash: latestBlockHash.blockhash,
+    //   //   lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+    //   //   signature: tx,
+    //   // });
+    // });
 
-  // it("Verified a whitelist data!", async () => {
-  //   const [whitelistPubkey, _whitelistBump] =
-  //     await anchor.web3.PublicKey.findProgramAddress(
-  //       [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
-  //       program.programId
-  //     );
+    it("Verified a whitelist data!", async () => {
+      const [whitelistPubkey, _whitelistBump] =
+        await anchor.web3.PublicKey.findProgramAddress(
+          [anchor.utils.bytes.utf8.encode("test"), wallet.publicKey.toBytes()],
+          program.programId
+        );
 
-  //   const [whitelistDataPubkey, _whitelistDataBump] =
-  //     await anchor.web3.PublicKey.findProgramAddress(
-  //       [whitelistPubkey.toBytes(), add_to_whitelist.publicKey.toBytes()],
-  //       program.programId
-  //     );
+      const [whitelistDataPubkey, _whitelistDataBump] =
+        await anchor.web3.PublicKey.findProgramAddress(
+          [whitelistPubkey.toBytes(), add_to_whitelist.publicKey.toBytes()],
+          program.programId
+        );
 
-  //   const whitelistData = await program.account.whitelistData.fetch(
-  //     whitelistDataPubkey
-  //   );
-  //   // console.log("whitelistDataPubkey", whitelistDataPubkey.toString());
-  //   console.log("The data is whitelisted: ", whitelistData);
-  // });
+      const whitelistData = await program.account.whitelistData.fetch(
+        whitelistDataPubkey
+      );
+      // console.log("whitelistDataPubkey", whitelistDataPubkey.toString());
+      console.log("The data is whitelisted: ", whitelistData);
+    });
+  });
 });

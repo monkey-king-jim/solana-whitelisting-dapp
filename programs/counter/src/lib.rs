@@ -48,6 +48,10 @@ pub mod counter {
         }
         Ok(())
     }
+
+    pub fn add_to_whitelist(ctx: Context<AddToWhitelist>) -> Result<()> {
+        whitelisting::cpi::add_to_whitelist(ctx.accounts.add_to_whitelist_ctx())
+    }
 }
 
 // data validators
@@ -100,7 +104,18 @@ pub struct Increment<'info> {
             whitelisted_data.key().as_ref()
         ], 
         bump,
-        seeds::program = counter.whitelist_config,
+        seeds::program = pubkey!("DoXHuZ7cuGeDiLV6AwnoEsMLo1UGZ3AX5Mk7KgEy4UwV"),
+        
+    )]
+    pub whitelist_config: Account<'info, Whitelist>,
+    #[account(
+        seeds = 
+        [
+            whitelist_config.authority.key().as_ref(), 
+            whitelisted_data.key().as_ref()
+        ], 
+        bump,
+        seeds::program = whitelist_config.key(),
         has_one = whitelisted_data
     )]
     pub whitelist_data: Account<'info, WhitelistData>,
@@ -111,6 +126,44 @@ pub struct Increment<'info> {
 pub struct Decrement<'info> {
     #[account(mut)]
     pub counter: Account<'info, Counter>,
+}
+
+#[derive(Accounts)]
+pub struct AddToWhitelist<'info> {
+    pub authority: Signer<'info>,
+    pub wallet: UncheckedAccount<'info>, 
+    #[account(
+        mut,
+        seeds = 
+        [
+            &USECASE.as_bytes(), 
+            authority.key().as_ref()
+        ], 
+        bump,
+        seeds::program = pubkey!("DoXHuZ7cuGeDiLV6AwnoEsMLo1UGZ3AX5Mk7KgEy4UwV"), 
+        has_one=authority
+    )]
+    pub whitelist_config: Account<'info, Whitelist>,
+    #[account(mut)]
+    /// CHECK: ok
+    pub whitelist_data: UncheckedAccount<'info>,
+    pub whitelisting_program: Program<'info, Whitelisting>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info> AddToWhitelist<'info> {
+    pub fn add_to_whitelist_ctx(&self) -> CpiContext<'_, '_, '_, 'info, AddToWhitelist<'info>> {
+        let whitelisting_program_id = self.whitelisting_program.to_account_info();
+        let whitelist_data_accounts = AddToWhitelist {
+            whitelist_config: self.whitelist_config,
+            wallet: self.wallet,
+            authority: self.authority,
+            whitelist_data: self.whitelist_data,
+            whitelisting_program: self.whitelisting_program,
+            system_program: self.system_program,
+        };
+        CpiContext::new(whitelisting_program_id, whitelist_data_accounts)
+    }
 }
 
 // data structures

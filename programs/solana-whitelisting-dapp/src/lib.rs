@@ -11,7 +11,7 @@ const PUBKEY_LENGTH: usize = 32;
 pub mod whitelisting {
     use super::*;
 
-    // create a base whitelist for a use case specified by the user
+    // create a config whitelist account for a use case specified by the user
     pub fn create_whitelist(ctx: Context<CreateWhitelist>, _key: String) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.authority = ctx.accounts.authority.key();
@@ -21,6 +21,10 @@ pub mod whitelisting {
     pub fn add_to_whitelist(ctx: Context<AddToWhitelist>) -> Result<()> {
         let whitelist_data = &mut ctx.accounts.whitelist_data;
         whitelist_data.whitelisted_data = ctx.accounts.wallet.key();
+        Ok(())
+    }
+
+    pub fn remove_from_whitelist(ctx: Context<AddToWhitelist>, _key: String) -> Result<()> {
         Ok(())
     }
 }
@@ -68,6 +72,33 @@ pub struct AddToWhitelist<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+#[instruction(key: String)]
+pub struct RemoveFromWhitelist<'info> {
+    #[account(
+        mut, 
+        seeds = [
+            authority.key().as_ref(), 
+            key.as_bytes()], 
+            bump
+        )]
+    pub whitelist: Account<'info, Whitelist>,
+    #[account(
+        mut, 
+        seeds = [
+            authority.key().as_ref(), 
+            whitelist_data.key().as_ref(), 
+            key.as_bytes()
+            ], 
+        bump, 
+        close=authority)]
+    pub whitelist_data: Account<'info, WhitelistData>,
+    /// CHECK: TODO
+    pub whitelisted_data: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
 // data structures
 #[account]
 pub struct Whitelist {
@@ -87,7 +118,4 @@ pub struct WhitelistData {
 impl WhitelistData {
     const LEN: usize = DISCRIMINATOR_LENGTH + PUBKEY_LENGTH;
 
-    pub fn helper() -> Pubkey {
-        Pubkey::new_unique()
-    }
 }
