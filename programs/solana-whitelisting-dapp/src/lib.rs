@@ -11,40 +11,42 @@ const PUBKEY_LENGTH: usize = 32;
 pub mod whitelisting {
     use super::*;
 
-    // create a config whitelist account for a use case specified by the user
-    pub fn create_whitelist(ctx: Context<CreateWhitelist>, _key: String) -> Result<()> {
-        let whitelist = &mut ctx.accounts.whitelist;
-        whitelist.authority = ctx.accounts.authority.key();
+    // create a whitelist config account for a use case specified by the input seed
+    pub fn create_whitelist_config(ctx: Context<CreateWhitelistConfig>, _seed: String) -> Result<()> {
+        let whitelist_config = &mut ctx.accounts.whitelist_config;
+        whitelist_config.authority = ctx.accounts.authority.key();
         Ok(())
     }
 
+    // add a wallet address to the whitelist
     pub fn add_to_whitelist(ctx: Context<AddToWhitelist>) -> Result<()> {
         let whitelist_data = &mut ctx.accounts.whitelist_data;
         whitelist_data.whitelisted_data = ctx.accounts.wallet.key();
         Ok(())
     }
 
-    pub fn remove_from_whitelist(ctx: Context<AddToWhitelist>, _key: String) -> Result<()> {
+    pub fn remove_from_whitelist(_ctx: Context<RemoveFromWhitelist>, _seed: String) -> Result<()> {
         Ok(())
     }
 }
 
 // data validators
 #[derive(Accounts)]
-#[instruction(key: String)]
-pub struct CreateWhitelist<'info> {
+#[instruction(seed: String)]
+pub struct CreateWhitelistConfig<'info> {
+    // initialize an account on solana chain
     #[account(
         init, 
         payer = authority, 
-        space = Whitelist::LEN, 
+        space = WhitelistConfig::LEN, 
         seeds = [
             // pass in whitelist use case string
-            &key.as_bytes(), 
+            &seed.as_bytes(), 
             authority.key().as_ref(), 
         ],
         bump
     )]
-    pub whitelist: Account<'info, Whitelist>,
+    pub whitelist_config: Account<'info, WhitelistConfig>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -52,18 +54,19 @@ pub struct CreateWhitelist<'info> {
 
 #[derive(Accounts)]
 pub struct AddToWhitelist<'info> {
+    // security check to see if the caller has the authority
     #[account(mut, has_one=authority)]
-    pub whitelist: Account<'info, Whitelist>,
-    /// CHECK: TODO
-    pub wallet: UncheckedAccount<'info>, 
-    #[account(mut)]
+    pub whitelist_config: Account<'info, WhitelistConfig>,
+    /// CHECK: the wallet is passed in as a pubkey
+    pub wallet: UncheckedAccount<'info>,
+    #[account(mut)] 
     pub authority: Signer<'info>,
     #[account(
         init,
         payer = authority,
         space = WhitelistData::LEN,
         seeds = [
-            whitelist.key().as_ref(),
+            whitelist_config.key().as_ref(),
             wallet.key().as_ref(),
         ],
         bump
@@ -73,27 +76,29 @@ pub struct AddToWhitelist<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(key: String)]
+#[instruction(seed: String)]
 pub struct RemoveFromWhitelist<'info> {
     #[account(
         mut, 
         seeds = [
             authority.key().as_ref(), 
-            key.as_bytes()], 
-            bump
-        )]
-    pub whitelist: Account<'info, Whitelist>,
+            seed.as_bytes()
+            ], 
+        bump,
+        has_one = authority
+    )]
+    pub whitelist_config: Account<'info, WhitelistConfig>,
     #[account(
         mut, 
         seeds = [
             authority.key().as_ref(), 
             whitelist_data.key().as_ref(), 
-            key.as_bytes()
             ], 
         bump, 
-        close=authority)]
+        close=authority
+    )]
     pub whitelist_data: Account<'info, WhitelistData>,
-    /// CHECK: TODO
+    /// CHECK: wallet pubkey
     pub whitelisted_data: UncheckedAccount<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -101,12 +106,12 @@ pub struct RemoveFromWhitelist<'info> {
 
 // data structures
 #[account]
-pub struct Whitelist {
+pub struct WhitelistConfig {
     pub authority: Pubkey
 }
 
 
-impl Whitelist {
+impl WhitelistConfig {
     const LEN: usize = DISCRIMINATOR_LENGTH + PUBKEY_LENGTH;
 }
 

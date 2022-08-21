@@ -3,10 +3,10 @@ use anchor_lang::prelude::*;
 use whitelisting::{
     self, 
     program::Whitelisting, 
-    Whitelist,
+    WhitelistConfig,
     WhitelistData
 };
-use whitelisting::cpi::accounts::CreateWhitelist;
+use whitelisting::cpi::accounts::CreateWhitelistConfig;
 use anchor_lang::context::CpiContext;
 use solana_program::{
     pubkey::Pubkey,
@@ -14,9 +14,10 @@ use solana_program::{
 };
 
 declare_id!("3pBmYTFPiUNstae4M2WUAQ6Giydr4nstQ6rnM1TXh8vk");
+// the use case seed for this counter program is "counter"
 const USECASE: &str = "counter";
 
-//Data logics
+// business logics
 #[program]
 pub mod counter {
     use super::*;
@@ -26,7 +27,8 @@ pub mod counter {
         counter.count = 0;
         counter.whitelist_config = ctx.accounts.whitelist_config.key();
         
-        whitelisting::cpi::create_whitelist(ctx.accounts.create_whitelist_ctx(), USECASE.to_string())
+        // make a cpi to create a whitelist config account along with the counter account
+        whitelisting::cpi::create_whitelist_config(ctx.accounts.create_whitelist_config_ctx(), USECASE.to_string())
     }
 
     pub fn update(ctx: Context<Update>, count: u32) -> Result<()> {
@@ -47,10 +49,6 @@ pub mod counter {
             counter_account.count -= 1;
         }
         Ok(())
-    }
-
-    pub fn add_to_whitelist(ctx: Context<AddToWhitelist>) -> Result<()> {
-        whitelisting::cpi::add_to_whitelist(ctx.accounts.add_to_whitelist_ctx())
     }
 }
 
@@ -76,10 +74,10 @@ pub struct CreateCounter<'info> {
 }
 
 impl<'info> CreateCounter<'info> {
-    pub fn create_whitelist_ctx(&self) -> CpiContext<'_, '_, '_, 'info, CreateWhitelist<'info>> {
+    pub fn create_whitelist_config_ctx(&self) -> CpiContext<'_, '_, '_, 'info, CreateWhitelistConfig<'info>> {
         let whitelisting_program_id = self.whitelisting_program.to_account_info();
-        let whitelisting_accounts = CreateWhitelist {
-            whitelist: self.whitelist_config.to_account_info(),
+        let whitelisting_accounts = CreateWhitelistConfig {
+            whitelist_config: self.whitelist_config.to_account_info(),
             authority: self.user.to_account_info(),
             system_program: self.system_program.to_account_info(),
         };
@@ -97,17 +95,19 @@ pub struct Update<'info> {
 pub struct Increment<'info> {
     #[account(mut)]
     pub counter: Account<'info, Counter>,
+    // verify the whitelist config account passed in validator is the one associated with this counter
     #[account( 
         seeds = 
         [
             &USECASE.as_bytes(), 
-            whitelisted_data.key().as_ref()
+            whitelist_config.authority.key().as_ref()
         ], 
         bump,
         seeds::program = pubkey!("DoXHuZ7cuGeDiLV6AwnoEsMLo1UGZ3AX5Mk7KgEy4UwV"),
         
     )]
-    pub whitelist_config: Account<'info, Whitelist>,
+    pub whitelist_config: Account<'info, WhitelistConfig>,
+    // verify if the caller was whitelisted; if false, the caller cannot make change to the counter
     #[account(
         seeds = 
         [
@@ -119,6 +119,7 @@ pub struct Increment<'info> {
         has_one = whitelisted_data
     )]
     pub whitelist_data: Account<'info, WhitelistData>,
+    #[account(mut)]
     pub whitelisted_data: Signer<'info>,
 }
 
@@ -126,44 +127,6 @@ pub struct Increment<'info> {
 pub struct Decrement<'info> {
     #[account(mut)]
     pub counter: Account<'info, Counter>,
-}
-
-#[derive(Accounts)]
-pub struct AddToWhitelist<'info> {
-    pub authority: Signer<'info>,
-    pub wallet: UncheckedAccount<'info>, 
-    #[account(
-        mut,
-        seeds = 
-        [
-            &USECASE.as_bytes(), 
-            authority.key().as_ref()
-        ], 
-        bump,
-        seeds::program = pubkey!("DoXHuZ7cuGeDiLV6AwnoEsMLo1UGZ3AX5Mk7KgEy4UwV"), 
-        has_one=authority
-    )]
-    pub whitelist_config: Account<'info, Whitelist>,
-    #[account(mut)]
-    /// CHECK: ok
-    pub whitelist_data: UncheckedAccount<'info>,
-    pub whitelisting_program: Program<'info, Whitelisting>,
-    pub system_program: Program<'info, System>,
-}
-
-impl<'info> AddToWhitelist<'info> {
-    pub fn add_to_whitelist_ctx(&self) -> CpiContext<'_, '_, '_, 'info, AddToWhitelist<'info>> {
-        let whitelisting_program_id = self.whitelisting_program.to_account_info();
-        let whitelist_data_accounts = AddToWhitelist {
-            whitelist_config: self.whitelist_config,
-            wallet: self.wallet,
-            authority: self.authority,
-            whitelist_data: self.whitelist_data,
-            whitelisting_program: self.whitelisting_program,
-            system_program: self.system_program,
-        };
-        CpiContext::new(whitelisting_program_id, whitelist_data_accounts)
-    }
 }
 
 // data structures
